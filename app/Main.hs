@@ -1,6 +1,10 @@
 module Main where
 
-import Lib
+import Options.Applicative
+import qualified Opts
+import qualified UUIDs
 
 main :: IO ()
-main = someFunc
+main = do
+  opts <- execParser Opts.opts
+  UUIDs.gen (Opts.to opts) (Opts.nr opts)
