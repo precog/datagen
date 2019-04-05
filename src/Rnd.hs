@@ -36,19 +36,19 @@ nelLength (_ :| t) = 1 + length t
 -- duplicates in List are simply removed when they are stored in the Map
 randomHourCounts :: RandomGen g => Rand g D.HourCounts
 randomHourCounts = D.HourCounts <$> do
-  nrElems <- getRandomR (0, 23)
+  nrElems <- getRandomR (1, 23)
   Map.fromList <$> replicateM nrElems randomPair
 
 randomCampaignCounts :: RandomGen g => NEL.NonEmpty D.Campaign -> Rand g D.CampaignCounts
 randomCampaignCounts cs = do
-  nrElems <- getRandomR (0, nelLength cs - 1)
+  nrElems <- getRandomR (1, nelLength cs - 1)
   D.CampaignCounts <$> Map.fromList <$> replicateM nrElems randomPair
   where 
     randomPair = (,) <$> randomFromNEL cs <*> randomHourCounts
 
 randomEventCounts :: RandomGen g => NEL.NonEmpty D.Campaign -> NEL.NonEmpty D.Event -> Rand g D.EventCounts
 randomEventCounts cs es = do
-  nrElems <- getRandomR (0, length es - 1)
+  nrElems <- getRandomR (1, length es - 1)
   D.EventCounts <$> Map.fromList <$> replicateM nrElems randomPair
   where 
     randomPair = (,) <$> randomFromNEL es <*> randomCampaignCounts cs
