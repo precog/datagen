@@ -21,12 +21,19 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- aeson
 - bytestring
 - cassava
 - cassava-conduit
+- containers
+- MonadRandom
+- mtl
+- ndjson-conduit
 - optparse-applicative
+- random
 - text
 - uuid
+- utf8-string
 - vector
 
 library:

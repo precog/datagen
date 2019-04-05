@@ -1,38 +1,49 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
 module Opts where
 
 import Prelude
 import Options.Applicative
 
+data Options = Gen GenOptions | GenUuid GenUuidOptions
+
+data GenOptions = GenOptions
+  { nr :: Int 
+  }
+
 data GenUuidOptions = GenUuidOptions
   { nr :: Int 
-  , to :: FilePath
   }
 
 nrOpt :: Parser Int
 nrOpt = option auto
   (  long "number"
   <> short 'n' 
-  <> help "Number of UUIDs to generate"
+  <> help "Number of rows to generate"
   <> showDefault
   <> value 100
   <> metavar "INT" )
 
-toOpt :: Parser FilePath
-toOpt = strOption
-  (  long "file"
-  <> short 'f'
-  <> metavar "FILENAME"
-  <> showDefault
-  <> value "campaigns.csv"
-  <> help "Output file" )
-  
-genUuidOpts :: Parser GenUuidOptions
-genUuidOpts = GenUuidOptions <$> nrOpt <*> toOpt
+genUuidOpts0 :: Parser GenUuidOptions
+genUuidOpts0 = GenUuidOptions <$> nrOpt
 
-opts :: ParserInfo GenUuidOptions
-opts = info genUuidOpts
+genUuidOpts :: Parser GenUuidOptions
+genUuidOpts = subparser $
+  command "genuuids" (info genUuidOpts0 ( progDesc "Generates a number of UUIDs and writes them to file" ))
+
+genOpts0 :: Parser GenOptions
+genOpts0 = GenOptions <$> nrOpt
+
+genOpts :: Parser GenOptions
+genOpts = subparser $
+  command "gen" (info genOpts0 ( progDesc "Generates ldjson and csv files" ))
+
+parser :: Parser Options
+parser = (GenUuid <$> genUuidOpts) <|> (Gen <$> genOpts)
+
+opts :: ParserInfo Options
+opts = info parser
   (  fullDesc
   <> progDesc "Little tool to generate data"
   <> header "datagen" 
