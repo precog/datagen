@@ -30,10 +30,10 @@ exec (Opts.Gen o) = do
     mkCampaigns0 :: [String] -> IO [D.Campaign]
     mkCampaigns0 ss = traverse (\(f, s) -> mkCampaign f s) $ zip [0..] ss
     mkCampaign :: Int -> String -> IO D.Campaign
-    mkCampaign i s = 
+    mkCampaign i s =
       maybe (ME.throwError $ userError $ "Error parsing UUID: " ++ s) pure $ D.Campaign i <$> UUID.fromString s
     mkEvents :: Vector [String] -> IO (NEL.NonEmpty D.Event)
-    mkEvents sss = 
+    mkEvents sss =
       maybe (ME.throwError $ userError "No events found") pure $ NEL.nonEmpty (mkEvents0 (ME.join $ Vector.toList sss))
     mkEvents0 :: [String] -> [D.Event]
     mkEvents0 ss = map (\(f, s) -> D.Event f s) $ zip [0..] ss

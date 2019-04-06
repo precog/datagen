@@ -8,8 +8,8 @@ import Prelude
 import qualified Data.Csv as Csv
 import qualified GHC.Generics as G
 
-data UuidRecord = UuidRecord 
-  { uuid :: String 
+data UuidRecord = UuidRecord
+  { uuid :: String
   } deriving (Show, G.Generic)
 
 instance Csv.ToRecord UuidRecord
@@ -31,7 +31,7 @@ data Campaign = Campaign
 
 instance Csv.ToRecord Campaign
 
-data HourCount = HourCount  
+data HourCount = HourCount
   { id :: Int
   , row_index :: Int
   , event_id :: Int

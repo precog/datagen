@@ -8,7 +8,6 @@ module Gen
 import Prelude
 import qualified Control.Monad.Random as R
 import qualified Data.Aeson as Aeson
-import qualified Data.ByteString.Lazy as ByteString
 import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.List.NonEmpty as NEL
 import qualified Data.Map.Strict as Map
@@ -21,54 +20,80 @@ import qualified DomainCsv as Csv
 import qualified Opts
 import qualified Rnd
 
-ldjsonEncodeToFile :: Aeson.ToJSON a => FilePath -> [a] -> IO ()
-ldjsonEncodeToFile filePath as =
-  ByteString.writeFile filePath (BSC.unlines $ map Aeson.encode as)
+ldjsonEncodeToFile :: Aeson.ToJSON a => D.FileWriteMode -> FilePath -> [a] -> IO ()
+ldjsonEncodeToFile mode filePath as =
+  (D.writeFile mode) filePath (BSC.unlines $ map Aeson.encode as)
 
-includeId :: [Int -> a] -> [a]
-includeId f = (\(p1, p2) -> p1 p2) <$> zip f [0..]
+includeId :: Int -> [Int -> a] -> [a]
+includeId startIndex f = (\(p1, p2) -> p1 p2) <$> zip f [startIndex..]
 
 mkCsvEvents :: (Int, D.EventCounts) -> [Int -> Csv.Event]
-mkCsvEvents (rowIndex, (D.EventCounts m)) = 
+mkCsvEvents (rowIndex, (D.EventCounts m)) =
   mk <$> Map.toList m
   where
     mk :: (D.Event, D.CampaignCounts) -> (Int -> Csv.Event)
     mk (e, _) = \i -> Csv.Event i rowIndex (D.event e)
 
 mkCsvCampaigns :: (Int, D.EventCounts) -> [Int -> Csv.Campaign]
-mkCsvCampaigns (rowIndex, (D.EventCounts m)) = 
+mkCsvCampaigns (rowIndex, (D.EventCounts m)) =
   Map.toList m >>= mk
   where
     mk :: (D.Event, D.CampaignCounts) -> [Int -> Csv.Campaign]
-    mk (e, (D.CampaignCounts m)) = 
+    mk (e, (D.CampaignCounts m)) =
       (map (\(c, _) -> (e, c)) $ Map.toList m) >>= (pure . mk1)
     mk1 :: (D.Event, D.Campaign) -> (Int -> Csv.Campaign)
     mk1 (e, c) = (\i -> Csv.Campaign i rowIndex (D.eventId e) (UUID.toString (D.campaign c)))
 
 mkCsvHourCounts :: (Int, D.EventCounts) -> [Int -> Csv.HourCount]
-mkCsvHourCounts (rowIndex, (D.EventCounts m)) = 
+mkCsvHourCounts (rowIndex, (D.EventCounts m)) =
   Map.toList m >>= mk
   where
     mk :: (D.Event, D.CampaignCounts) -> [Int -> Csv.HourCount]
-    mk (e, (D.CampaignCounts m)) = 
+    mk (e, (D.CampaignCounts m)) =
       (map (\(c, hc) -> (e, c, hc)) $ Map.toList m) >>= mk0
     mk0 :: (D.Event, D.Campaign, D.HourCounts) -> [Int -> Csv.HourCount]
-    mk0 (e, c, (D.HourCounts m)) =  
+    mk0 (e, c, (D.HourCounts m)) =
       (map (\(h, cnt) -> (e, c, h, cnt)) $ Map.toList m) >>= (pure . mk1)
     mk1 :: (D.Event, D.Campaign, D.Hour, D.Count) -> (Int -> Csv.HourCount)
     mk1 (e, c, h, cnt) = (\i -> Csv.HourCount i rowIndex (D.eventId e) (D.campaignId c) (D.hourToInt h) (D.countToInt cnt))
 
+data ChunkArgs = ChunkArgs
+  { startRow :: Int
+  , startE :: Int
+  , startEC :: Int
+  , startHC :: Int
+  , mode :: D.FileWriteMode
+  } deriving (Show)
+
+genChunk :: NEL.NonEmpty D.Campaign -> NEL.NonEmpty D.Event -> Int -> ChunkArgs -> IO ChunkArgs
+genChunk cs es nr (ChunkArgs startRow startE startEC startHC mode) = do
+  eventCounts <- R.evalRandIO $ R.replicateM nr $ Rnd.randomEventCounts cs es
+  ldjsonEncodeToFile mode "./eventCounts.ldjson" eventCounts
+  let indexedEventCounts = zip [startRow..] eventCounts
+  let csvEvents = includeId startE $ indexedEventCounts >>= mkCsvEvents
+  csvEncodeToFile mode "./events.csv" csvEvents
+  let csvEventCampaigns = includeId startEC $ indexedEventCounts >>= mkCsvCampaigns
+  csvEncodeToFile mode "./eventCampaigns.csv" csvEventCampaigns
+  let csvHourCounts = includeId startHC $ indexedEventCounts >>= mkCsvHourCounts
+  csvEncodeToFile mode "./hourCounts.csv" csvHourCounts
+  pure $ ChunkArgs (startRow + nr) (startE + length csvEvents) (startEC + length csvEventCampaigns) (startHC + length csvHourCounts) D.Append
+
 gen :: Opts.GenOptions -> NEL.NonEmpty D.Campaign -> NEL.NonEmpty D.Event -> IO ()
 gen (Opts.GenOptions nr) cs es = do
-  eventCounts <- R.evalRandIO $ R.replicateM nr $ Rnd.randomEventCounts cs es
-  ldjsonEncodeToFile "./eventCounts.ldjson" eventCounts
-  let indexedEventCounts = zip [0..] eventCounts
-  csvEncodeToFile "./events.csv" (includeId $ indexedEventCounts >>= mkCsvEvents)
-  csvEncodeToFile "./eventCampaigns.csv" (includeId $ indexedEventCounts >>= mkCsvCampaigns)
-  csvEncodeToFile "./hourCounts.csv" (includeId $ indexedEventCounts >>= mkCsvHourCounts)
+  go nr (ChunkArgs 0 0 0 0 D.Overwrite)
+  pure ()
+  where
+    go :: Int -> ChunkArgs -> IO ChunkArgs
+    go nr is
+      | nr <= 0 = pure is
+      | nr <= maxChunkSize = step nr is
+      | otherwise = do
+          nextIs <- step maxChunkSize is
+          go (nr - maxChunkSize) nextIs
+    step = genChunk cs es
+    maxChunkSize = 1000
 
 genUuids :: Opts.GenUuidOptions -> IO ()
 genUuids (Opts.GenUuidOptions nr) = do
   uuids <- R.replicateM nr (Csv.UuidRecord <$> UUID.toString <$> UUID_V4.nextRandom)
-  csvEncodeToFile "./campaigns.csv" uuids
-  
+  csvEncodeToFile D.Overwrite "./campaigns.csv" uuids

@@ -10,9 +10,11 @@ import qualified Data.Csv as Csv
 import Data.Vector (Vector)
 import System.IO.Error (userError)
 
-csvEncodeToFile :: Csv.ToRecord a => FilePath -> [a] -> IO ()
-csvEncodeToFile filePath as =
-  ByteString.writeFile filePath (Csv.encode as)
+import qualified Domain as D
+
+csvEncodeToFile :: Csv.ToRecord a => D.FileWriteMode -> FilePath -> [a] -> IO ()
+csvEncodeToFile mode filePath as =
+  (D.writeFile mode) filePath (Csv.encode as)
 
 csvDecodeFromFile :: Csv.FromRecord a => FilePath -> IO (Vector a)
 csvDecodeFromFile filePath = do

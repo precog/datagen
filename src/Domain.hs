@@ -7,11 +7,18 @@ module Domain where
 import Prelude
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Types as AesonTp
+import qualified Data.ByteString.Lazy as ByteString
 import Data.Map.Strict (Map)
 import qualified Data.Text as Text
 import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import qualified GHC.Generics as G
+
+data FileWriteMode = Append | Overwrite deriving (Show)
+
+writeFile :: FileWriteMode -> (FilePath -> ByteString.ByteString -> IO ())
+writeFile Append = ByteString.appendFile
+writeFile Overwrite = ByteString.writeFile
 
 newtype Hour = Hour Int deriving (Eq, Ord, Show, G.Generic)
 instance Aeson.ToJSON Hour

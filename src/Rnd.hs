@@ -43,12 +43,12 @@ randomCampaignCounts :: RandomGen g => NEL.NonEmpty D.Campaign -> Rand g D.Campa
 randomCampaignCounts cs = do
   nrElems <- getRandomR (1, nelLength cs - 1)
   D.CampaignCounts <$> Map.fromList <$> replicateM nrElems randomPair
-  where 
+  where
     randomPair = (,) <$> randomFromNEL cs <*> randomHourCounts
 
 randomEventCounts :: RandomGen g => NEL.NonEmpty D.Campaign -> NEL.NonEmpty D.Event -> Rand g D.EventCounts
 randomEventCounts cs es = do
   nrElems <- getRandomR (1, length es - 1)
   D.EventCounts <$> Map.fromList <$> replicateM nrElems randomPair
-  where 
+  where
     randomPair = (,) <$> randomFromNEL es <*> randomCampaignCounts cs

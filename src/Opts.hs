@@ -9,17 +9,17 @@ import Options.Applicative
 data Options = Gen GenOptions | GenUuid GenUuidOptions
 
 data GenOptions = GenOptions
-  { nr :: Int 
+  { nr :: Int
   }
 
 data GenUuidOptions = GenUuidOptions
-  { nr :: Int 
+  { nr :: Int
   }
 
 nrOpt :: Parser Int
 nrOpt = option auto
   (  long "number"
-  <> short 'n' 
+  <> short 'n'
   <> help "Number of rows to generate"
   <> showDefault
   <> value 100
@@ -46,5 +46,5 @@ opts :: ParserInfo Options
 opts = info parser
   (  fullDesc
   <> progDesc "Little tool to generate data"
-  <> header "datagen" 
+  <> header "datagen"
   )
