@@ -28,7 +28,7 @@ instance Aeson.ToJSONKey Hour where
 hourToInt :: Hour -> Int
 hourToInt (Hour i) = i
 
-newtype Count = Count Int deriving (G.Generic)
+newtype Count = Count Int deriving (Eq, Ord, G.Generic)
 instance Aeson.ToJSON Count
 
 countToInt :: Count -> Int
@@ -48,7 +48,7 @@ campaignId (Campaign i _) = i
 data Event = Event
   { id :: Int
   , event :: String
-  } deriving (Eq, Ord, G.Generic)
+  } deriving (Eq, Ord, Show, G.Generic)
 instance Aeson.ToJSON Event
 instance Aeson.ToJSONKey Event where
   toJSONKey = AesonTp.toJSONKeyText (Text.pack . event)

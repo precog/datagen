@@ -18,5 +18,5 @@ csvEncodeToFile mode filePath as =
 
 csvDecodeFromFile :: Csv.FromRecord a => FilePath -> IO (Vector a)
 csvDecodeFromFile filePath = do
-  d <- Csv.decode Csv.HasHeader <$> ByteString.readFile filePath
+  d <- Csv.decode Csv.NoHeader <$> ByteString.readFile filePath
   either (ME.throwError . userError) pure d
