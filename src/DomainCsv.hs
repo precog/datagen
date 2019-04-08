@@ -20,7 +20,8 @@ data Event = Event
   , event :: String
   } deriving (Show, G.Generic)
 
-instance Csv.ToRecord Event
+instance Csv.DefaultOrdered Event
+instance Csv.ToNamedRecord Event
 
 data Campaign = Campaign
   { id :: Int
@@ -29,7 +30,8 @@ data Campaign = Campaign
   , campaign :: String
   } deriving (Show, G.Generic)
 
-instance Csv.ToRecord Campaign
+instance Csv.DefaultOrdered Campaign
+instance Csv.ToNamedRecord Campaign
 
 data HourCount = HourCount
   { id :: Int
@@ -40,4 +42,5 @@ data HourCount = HourCount
   , count :: Int
   } deriving (Show, G.Generic)
 
-instance Csv.ToRecord HourCount
+instance Csv.DefaultOrdered HourCount
+instance Csv.ToNamedRecord HourCount

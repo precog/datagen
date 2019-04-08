@@ -14,7 +14,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID_V4
 
-import Csv (csvEncodeToFile)
+import Csv (csvEncodeNamedToFile, csvEncodeToFile)
 import qualified Domain as D
 import qualified DomainCsv as Csv
 import qualified Opts
@@ -71,11 +71,11 @@ genChunk cs es nr (ChunkArgs startRow startE startEC startHC mode) = do
   ldjsonEncodeToFile mode "./eventCounts.ldjson" eventCounts
   let indexedEventCounts = zip [startRow..] eventCounts
   let csvEvents = includeId startE $ indexedEventCounts >>= mkCsvEvents
-  csvEncodeToFile mode "./events.csv" csvEvents
+  csvEncodeNamedToFile mode "./events.csv" csvEvents
   let csvEventCampaigns = includeId startEC $ indexedEventCounts >>= mkCsvCampaigns
-  csvEncodeToFile mode "./eventCampaigns.csv" csvEventCampaigns
+  csvEncodeNamedToFile mode "./eventCampaigns.csv" csvEventCampaigns
   let csvHourCounts = includeId startHC $ indexedEventCounts >>= mkCsvHourCounts
-  csvEncodeToFile mode "./hourCounts.csv" csvHourCounts
+  csvEncodeNamedToFile mode "./hourCounts.csv" csvHourCounts
   pure $ ChunkArgs (startRow + nr) (startE + length csvEvents) (startEC + length csvEventCampaigns) (startHC + length csvHourCounts) D.Append
 
 gen :: Opts.GenOptions -> NEL.NonEmpty D.Campaign -> NEL.NonEmpty D.Event -> IO ()
