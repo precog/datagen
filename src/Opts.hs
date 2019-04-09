@@ -29,21 +29,21 @@ genUuidOpts0 :: Parser GenUuidOptions
 genUuidOpts0 = GenUuidOptions <$> nrOpt
 
 genUuidOpts :: Parser GenUuidOptions
-genUuidOpts = subparser $
+genUuidOpts = hsubparser $
   command "genuuids" (info genUuidOpts0 ( progDesc "Generates a number of UUIDs and writes them to file" ))
 
 genOpts0 :: Parser GenOptions
 genOpts0 = GenOptions <$> nrOpt
 
 genOpts :: Parser GenOptions
-genOpts = subparser $
+genOpts = hsubparser $
   command "gen" (info genOpts0 ( progDesc "Generates ldjson and csv files" ))
 
 parser :: Parser Options
 parser = (GenUuid <$> genUuidOpts) <|> (Gen <$> genOpts)
 
 opts :: ParserInfo Options
-opts = info parser
+opts = info (parser <**> helper)
   (  fullDesc
   <> progDesc "Little tool to generate data"
   <> header "datagen"
