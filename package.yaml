@@ -24,11 +24,9 @@ dependencies:
 - aeson
 - bytestring
 - cassava
-- cassava-conduit
 - containers
 - MonadRandom
 - mtl
-- ndjson-conduit
 - optparse-applicative
 - random
 - text
@@ -43,10 +41,6 @@ executables:
   datagen-exe:
     main:                Main.hs
     source-dirs:         app
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
     dependencies:
     - datagen
 
@@ -54,9 +48,5 @@ tests:
   datagen-test:
     main:                Spec.hs
     source-dirs:         test
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
     dependencies:
     - datagen
