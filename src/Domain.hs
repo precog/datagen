@@ -56,11 +56,11 @@ instance Aeson.ToJSONKey Event where
 eventId :: Event -> Int
 eventId (Event i _) = i
 
-newtype HourCounts = HourCounts (Map Hour Count) deriving (G.Generic)
+newtype EventCounts = EventCounts (Map Event Count) deriving (G.Generic)
+instance Aeson.ToJSON EventCounts
+
+newtype HourCounts = HourCounts (Map Hour EventCounts) deriving (G.Generic)
 instance Aeson.ToJSON HourCounts
 
 newtype CampaignCounts = CampaignCounts (Map Campaign HourCounts) deriving (G.Generic)
 instance Aeson.ToJSON CampaignCounts
-
-newtype EventCounts = EventCounts (Map Event CampaignCounts) deriving (G.Generic)
-instance Aeson.ToJSON EventCounts
