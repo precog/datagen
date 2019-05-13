@@ -20,9 +20,6 @@ $ stack build
 stack exec datagen-exe -- genuuids -n 20
 
 # Use the generated ./campaigns.csv to create 
-# ./eventCounts.ldjson
-# ./events.csv 
-# ./eventCampaigns.csv and
-# ./hourCounts.csv
+# ./stats.ldjson
 stack exec datagen-exe -- gen -n 20
 ```
