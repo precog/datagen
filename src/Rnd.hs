@@ -39,24 +39,25 @@ randomEventCountPair es = do
 
 -- Currently the following functions favor smaller amounts because
 -- duplicates in List are simply removed when they are stored in the Map
-randomEventCountsPair :: RandomGen g => NEL.NonEmpty D.Event -> Rand g (D.EventCounts, D.EventCounts)
-randomEventCountsPair es = do
+randomEventCounts :: RandomGen g => NEL.NonEmpty D.Event -> Rand g D.EventCounts
+randomEventCounts es = do
   nrElems <- getRandomR (1, length es - 1)
   mk <$> replicateM nrElems (randomEventCountPair es)
   where
-    mk = (\(x, y) -> (mkEventCounts x, mkEventCounts $ filter (\p -> snd p > D.Count 0) $ y)) <$> unzip
+    mk :: [((D.Event, D.Count), (D.Event, D.Count))] -> D.EventCounts
+    mk = (\(x, y) -> mkEventCounts $ x ++ filter (\p -> snd p > D.Count 0) y) <$> unzip
     mkEventCounts = D.EventCounts . Map.fromList
 
-randomHourCountsPair :: RandomGen g => NEL.NonEmpty D.Event -> Rand g (D.HourCounts, D.HourCounts)
-randomHourCountsPair es = do
+randomHourCounts :: RandomGen g => NEL.NonEmpty D.Event -> Rand g D.HourCounts
+randomHourCounts es = do
   nrElems <- getRandomR (1, 23)
   mk <$> replicateM nrElems randomPair
   where
-    randomPair = (,) <$> randomHour <*> randomEventCountsPair es
-    mk :: [(D.Hour, (D.EventCounts, D.EventCounts))] -> (D.HourCounts, D.HourCounts)
-    mk = mk0 <$> (\(x, y) -> (x, unzip y)) <$> unzip
-    mk0 :: ([D.Hour], ([D.EventCounts], [D.EventCounts])) -> (D.HourCounts, D.HourCounts)
-    mk0 (hs, (ecs1, ecs2)) = (mkHourCounts $ zip hs ecs1, mkHourCounts $ zip hs ecs2)
+    randomPair = (,) <$> randomHour <*> randomEventCounts es
+    mk :: [(D.Hour, D.EventCounts)] -> D.HourCounts
+    mk = mk0 <$> unzip
+    mk0 :: ([D.Hour], [D.EventCounts]) -> D.HourCounts
+    mk0 (hs, ecs) = mkHourCounts $ zip hs ecs
     mkHourCounts = D.HourCounts . Map.fromList
 
 randomCampaignCounts :: RandomGen g => NEL.NonEmpty D.Campaign -> NEL.NonEmpty D.Event -> Rand g D.CampaignCounts
@@ -64,11 +65,9 @@ randomCampaignCounts cs es = do
   nrElems <- getRandomR (1, length cs - 1)
   mk <$> replicateM nrElems randomPair
   where
-    randomPair :: RandomGen g => Rand g (D.Campaign, (D.HourCounts, D.HourCounts))
-    randomPair = (,) <$> randomFromNEL cs <*> randomHourCountsPair es
-    mk :: [(D.Campaign, (D.HourCounts, D.HourCounts))] -> D.CampaignCounts
-    mk = mk0 <$> (\(x, y) -> (x, unzip y)) <$> unzip
-    mk0 :: ([D.Campaign], ([D.HourCounts], [D.HourCounts])) -> D.CampaignCounts
-    mk0 (cs, (hcs1, hcs2)) = D.CampaignCounts $
-      Map.union (mkMap $ zip cs hcs1) (mkMap $ zip cs hcs2)
-    mkMap = Map.fromList
+    randomPair :: RandomGen g => Rand g (D.Campaign, D.HourCounts)
+    randomPair = (,) <$> randomFromNEL cs <*> randomHourCounts es
+    mk :: [(D.Campaign, D.HourCounts)] -> D.CampaignCounts
+    mk = mk0 <$> unzip
+    mk0 :: ([D.Campaign], [D.HourCounts]) -> D.CampaignCounts
+    mk0 (cs, hcs) = D.CampaignCounts $ Map.fromList $ zip cs hcs

@@ -64,3 +64,9 @@ instance Aeson.ToJSON HourCounts
 
 newtype CampaignCounts = CampaignCounts (Map Campaign HourCounts) deriving (G.Generic)
 instance Aeson.ToJSON CampaignCounts
+
+data Row = Row
+  { date :: Int
+  , stats :: CampaignCounts
+  } deriving (G.Generic)
+instance Aeson.ToJSON Row

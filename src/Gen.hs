@@ -27,6 +27,14 @@ ldjsonEncodeToFile mode filePath as =
 includeId :: Int -> [Int -> a] -> [a]
 includeId startIndex f = (\(p1, p2) -> p1 p2) <$> zip f [startIndex..]
 
+mkRows :: [D.CampaignCounts] -> [Int -> D.Row]
+mkRows ccs =
+  mk <$> ccs
+  where
+    mk cc = \i -> D.Row (epochTime i) cc
+    -- 1546300800 = 1st of jan 2019
+    epochTime i = 1546300800 + (24 * 60 * 60 * i)
+
 -- mkCsvEvents :: (Int, D.EventCounts) -> [Int -> Csv.Event]
 -- mkCsvEvents (rowIndex, (D.EventCounts m)) =
 --   mk <$> Map.toList m
@@ -67,8 +75,9 @@ data ChunkArgs = ChunkArgs
 
 genChunk :: NEL.NonEmpty D.Campaign -> NEL.NonEmpty D.Event -> Int -> ChunkArgs -> IO ChunkArgs
 genChunk cs es nr (ChunkArgs startRow startE startEC startHC mode) = do
-  eventCounts <- R.evalRandIO $ R.replicateM nr $ Rnd.randomCampaignCounts cs es
-  ldjsonEncodeToFile mode "./eventCounts.ldjson" eventCounts
+  campaignCounts <- R.evalRandIO $ R.replicateM nr $ Rnd.randomCampaignCounts cs es
+  let rows = includeId startRow $ mkRows campaignCounts
+  ldjsonEncodeToFile mode "./stats.ldjson" rows
   -- let indexedEventCounts = zip [startRow..] eventCounts
   -- let csvEvents = includeId startE $ indexedEventCounts >>= mkCsvEvents
   -- csvEncodeNamedToFile mode "./events.csv" csvEvents
