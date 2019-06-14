@@ -11,6 +11,7 @@ import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.List.NonEmpty as NEL
 import qualified Data.Map.Strict as Map
+import qualified Data.Time as Time
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID_V4
 
@@ -31,9 +32,8 @@ mkRows :: [D.CampaignCounts] -> [Int -> D.Row]
 mkRows ccs =
   mk <$> ccs
   where
-    mk cc = \i -> D.Row (epochTime i) cc
-    -- 1546300800 = 1st of jan 2019
-    epochTime i = 1546300800 + (24 * 60 * 60 * i)
+    mk cc = \i -> D.Row (toDate i) cc
+    toDate i = Time.showGregorian (Time.addDays (toInteger i) (Time.fromGregorian 2019 1 1))
 
 -- mkCsvEvents :: (Int, D.EventCounts) -> [Int -> Csv.Event]
 -- mkCsvEvents (rowIndex, (D.EventCounts m)) =
