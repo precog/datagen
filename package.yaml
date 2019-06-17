@@ -30,6 +30,7 @@ dependencies:
 - optparse-applicative
 - random
 - text
+- time
 - uuid
 - utf8-string
 - vector

@@ -12,8 +12,9 @@ import qualified Data.Maybe as Maybe
 
 import qualified Domain as D
 
-randomHour :: RandomGen g => Rand g D.Hour
-randomHour = D.Hour <$> getRandomR (0, 23)
+
+randomMinuteOfDay :: RandomGen g => Rand g D.MinuteOfDay
+randomMinuteOfDay = D.MinuteOfDay <$> getRandomR (0, (24 * 60) - 1)
 
 randomCount :: RandomGen g => D.Count -> Rand g D.Count
 randomCount (D.Count max) = D.Count <$> getRandomR (0, max)
@@ -48,26 +49,26 @@ randomEventCounts es = do
     mk = (\(x, y) -> mkEventCounts $ x ++ filter (\p -> snd p > D.Count 0) y) <$> unzip
     mkEventCounts = D.EventCounts . Map.fromList
 
-randomHourCounts :: RandomGen g => NEL.NonEmpty D.Event -> Rand g D.HourCounts
-randomHourCounts es = do
-  nrElems <- getRandomR (1, 23)
+randomMinuteOfDayCounts :: RandomGen g => NEL.NonEmpty D.Event -> Rand g D.MinuteOfDayCounts
+randomMinuteOfDayCounts es = do
+  nrElems <- getRandomR (1, 24 * 60)
   mk <$> replicateM nrElems randomPair
   where
-    randomPair = (,) <$> randomHour <*> randomEventCounts es
-    mk :: [(D.Hour, D.EventCounts)] -> D.HourCounts
+    randomPair = (,) <$> randomMinuteOfDay <*> randomEventCounts es
+    mk :: [(D.MinuteOfDay, D.EventCounts)] -> D.MinuteOfDayCounts
     mk = mk0 <$> unzip
-    mk0 :: ([D.Hour], [D.EventCounts]) -> D.HourCounts
-    mk0 (hs, ecs) = mkHourCounts $ zip hs ecs
-    mkHourCounts = D.HourCounts . Map.fromList
+    mk0 :: ([D.MinuteOfDay], [D.EventCounts]) -> D.MinuteOfDayCounts
+    mk0 (mods, ecs) = mkMinuteOfDayCounts $ zip mods ecs
+    mkMinuteOfDayCounts = D.MinuteOfDayCounts . Map.fromList
 
 randomCampaignCounts :: RandomGen g => NEL.NonEmpty D.Campaign -> NEL.NonEmpty D.Event -> Rand g D.CampaignCounts
 randomCampaignCounts cs es = do
   nrElems <- getRandomR (1, length cs - 1)
   mk <$> replicateM nrElems randomPair
   where
-    randomPair :: RandomGen g => Rand g (D.Campaign, D.HourCounts)
-    randomPair = (,) <$> randomFromNEL cs <*> randomHourCounts es
-    mk :: [(D.Campaign, D.HourCounts)] -> D.CampaignCounts
+    randomPair :: RandomGen g => Rand g (D.Campaign, D.MinuteOfDayCounts)
+    randomPair = (,) <$> randomFromNEL cs <*> randomMinuteOfDayCounts es
+    mk :: [(D.Campaign, D.MinuteOfDayCounts)] -> D.CampaignCounts
     mk = mk0 <$> unzip
-    mk0 :: ([D.Campaign], [D.HourCounts]) -> D.CampaignCounts
-    mk0 (cs, hcs) = D.CampaignCounts $ Map.fromList $ zip cs hcs
+    mk0 :: ([D.Campaign], [D.MinuteOfDayCounts]) -> D.CampaignCounts
+    mk0 (cs, modcs) = D.CampaignCounts $ Map.fromList $ zip cs modcs

@@ -13,6 +13,7 @@ import qualified Data.Text as Text
 import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import qualified GHC.Generics as G
+import Text.Printf (printf)
 
 data FileWriteMode = Append | Overwrite deriving (Show)
 
@@ -20,13 +21,14 @@ writeFile :: FileWriteMode -> (FilePath -> ByteString.ByteString -> IO ())
 writeFile Append = ByteString.appendFile
 writeFile Overwrite = ByteString.writeFile
 
-newtype Hour = Hour Int deriving (Eq, Ord, Show, G.Generic)
-instance Aeson.ToJSON Hour
-instance Aeson.ToJSONKey Hour where
-  toJSONKey = AesonTp.toJSONKeyText (Text.pack . show . hourToInt)
+newtype MinuteOfDay = MinuteOfDay Int deriving (Eq, Ord, Show, G.Generic)
+instance Aeson.ToJSON MinuteOfDay
+instance Aeson.ToJSONKey MinuteOfDay where
+  toJSONKey = AesonTp.toJSONKeyText (Text.pack . minuteOfDayToString)
 
-hourToInt :: Hour -> Int
-hourToInt (Hour i) = i
+minuteOfDayToString :: MinuteOfDay -> String
+minuteOfDayToString (MinuteOfDay i) =
+  printf "%02d:%02d" (div i 60) (rem i 60)
 
 newtype Count = Count Int deriving (Eq, Ord, G.Generic)
 instance Aeson.ToJSON Count
@@ -59,14 +61,14 @@ eventId (Event i _) = i
 newtype EventCounts = EventCounts (Map Event Count) deriving (G.Generic)
 instance Aeson.ToJSON EventCounts
 
-newtype HourCounts = HourCounts (Map Hour EventCounts) deriving (G.Generic)
-instance Aeson.ToJSON HourCounts
+newtype MinuteOfDayCounts = MinuteOfDayCounts (Map MinuteOfDay EventCounts) deriving (G.Generic)
+instance Aeson.ToJSON MinuteOfDayCounts
 
-newtype CampaignCounts = CampaignCounts (Map Campaign HourCounts) deriving (G.Generic)
+newtype CampaignCounts = CampaignCounts (Map Campaign MinuteOfDayCounts) deriving (G.Generic)
 instance Aeson.ToJSON CampaignCounts
 
 data Row = Row
-  { date :: Int
+  { date :: String
   , stats :: CampaignCounts
   } deriving (G.Generic)
 instance Aeson.ToJSON Row
