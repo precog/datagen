@@ -7,6 +7,7 @@ module Gen
 
 import Prelude
 import qualified Control.Monad.Random as R
+import Control.Applicative (liftA2)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.List.NonEmpty as NEL
@@ -14,6 +15,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Time as Time
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID_V4
+import Data.Function ((&))
 
 import Csv (csvEncodeNamedToFile, csvEncodeToFile)
 import qualified Domain as D
@@ -89,7 +91,7 @@ genChunk cs es nr (ChunkArgs startRow startE startEC startHC mode) = do
 
 gen :: Opts.GenOptions -> NEL.NonEmpty D.Campaign -> NEL.NonEmpty D.Event -> IO ()
 gen (Opts.GenOptions nr) cs es = do
-  go nr (ChunkArgs 0 0 0 0 D.Overwrite)
+  _ <- go nr (ChunkArgs 0 0 0 0 D.Overwrite)
   pure ()
   where
     go :: Int -> ChunkArgs -> IO ChunkArgs
@@ -103,6 +105,19 @@ gen (Opts.GenOptions nr) cs es = do
     maxChunkSize = 1000
 
 genUuids :: Opts.GenUuidOptions -> IO ()
-genUuids (Opts.GenUuidOptions nr) = do
-  uuids <- R.replicateM nr (Csv.UuidRecord . UUID.toString <$> UUID_V4.nextRandom)
-  csvEncodeToFile D.Overwrite "./campaigns.csv" uuids
+genUuids (Opts.GenUuidOptions nr) =
+  liftA2 zip randUuids randFloats
+    &   fmap (map (uncurry Csv.UuidRecord))
+    >>= csvEncodeToFile D.Overwrite "./campaigns.csv"
+  where
+    randUuids :: IO [String]
+    randUuids =
+      R.replicateM nr (UUID.toString <$> UUID_V4.nextRandom)
+
+    randFloats :: IO [Double]
+    randFloats =
+      R.randomR (0, 100 :: Int)
+      & R.getStdRandom
+      & fmap ((/ 100) . fromIntegral)
+      & R.replicateM nr
+

@@ -7,12 +7,19 @@ module DomainCsv where
 import Prelude
 import qualified Data.Csv as Csv
 import qualified GHC.Generics as G
+import Numeric (showFFloat)
 
-newtype UuidRecord = UuidRecord
+data UuidRecord = UuidRecord
   { uuid :: String
+  , err_probability :: Double
   } deriving (Show, G.Generic)
 
-instance Csv.ToRecord UuidRecord
+instance Csv.ToRecord UuidRecord where
+  toRecord (UuidRecord uuid' err_prob) =
+    Csv.record
+      [ Csv.toField uuid'
+      , Csv.toField (showFFloat Nothing err_prob "")
+      ]
 
 data Event = Event
   { id :: Int
