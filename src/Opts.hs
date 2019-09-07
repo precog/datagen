@@ -8,13 +8,13 @@ import Options.Applicative
 
 data Options = Gen GenOptions | GenUuid GenUuidOptions
 
-data GenOptions = GenOptions
-  { nr :: Int
-  }
+newtype GenOptions =
+  GenOptions
+    { nr :: Int }
 
-data GenUuidOptions = GenUuidOptions
-  { nr :: Int
-  }
+newtype GenUuidOptions =
+  GenUuidOptions
+    { nr :: Int }
 
 nrOpt :: Parser Int
 nrOpt = option auto

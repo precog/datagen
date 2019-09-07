@@ -6,7 +6,7 @@ import Prelude
 import Control.Monad.Random (Rand, RandomGen, getRandomR, replicateM)
 import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NEL
-import Data.Map.Strict (Map(..))
+import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 
@@ -36,7 +36,7 @@ randomEventCountPair es = do
   pure ((sent e, nrSent), (errored e, nrErrored))
   where
     sent (D.Event i n) = D.Event i (n ++ "_sent")
-    errored (D.Event i n) = D.Event (i + (max 100 (length es))) (n ++ "_errored")
+    errored (D.Event i n) = D.Event (i + max 100 (length es)) (n ++ "_errored")
 
 -- Currently the following functions favor smaller amounts because
 -- duplicates in List are simply removed when they are stored in the Map

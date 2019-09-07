@@ -22,8 +22,8 @@ import qualified Opts
 import qualified Rnd
 
 ldjsonEncodeToFile :: Aeson.ToJSON a => D.FileWriteMode -> FilePath -> [a] -> IO ()
-ldjsonEncodeToFile mode filePath as =
-  (D.writeFile mode) filePath (BSC.unlines $ map Aeson.encode as)
+ldjsonEncodeToFile mode' filePath as =
+  D.writeFile mode' filePath (BSC.unlines $ map Aeson.encode as)
 
 includeId :: Int -> [Int -> a] -> [a]
 includeId startIndex f = (\(p1, p2) -> p1 p2) <$> zip f [startIndex..]
@@ -32,7 +32,7 @@ mkRows :: [D.CampaignCounts] -> [Int -> D.Row]
 mkRows ccs =
   mk <$> ccs
   where
-    mk cc = \i -> D.Row (toDate i) cc
+    mk cc i = D.Row (toDate i) cc
     toDate i = Time.showGregorian (Time.addDays (toInteger i) (Time.fromGregorian 2019 1 1))
 
 -- mkCsvEvents :: (Int, D.EventCounts) -> [Int -> Csv.Event]
@@ -104,5 +104,5 @@ gen (Opts.GenOptions nr) cs es = do
 
 genUuids :: Opts.GenUuidOptions -> IO ()
 genUuids (Opts.GenUuidOptions nr) = do
-  uuids <- R.replicateM nr (Csv.UuidRecord <$> UUID.toString <$> UUID_V4.nextRandom)
+  uuids <- R.replicateM nr (Csv.UuidRecord . UUID.toString <$> UUID_V4.nextRandom)
   csvEncodeToFile D.Overwrite "./campaigns.csv" uuids
