@@ -3,44 +3,36 @@
 module Main where
 
 import Prelude
+import Csv (csvDecodeFromFile)
+import Data.Functor ((<&>))
+import System.IO.Error (userError)
 import qualified Control.Monad.Except as ME
 import qualified Data.List.NonEmpty as NEL
-import qualified Data.UUID as UUID
-import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import qualified Options.Applicative as OA
-import System.IO.Error (userError)
-
-import Csv (csvDecodeFromFile)
 import qualified Domain as D
 import qualified Gen
+import qualified Options.Applicative as OA
 import qualified Opts
 
-exec :: Opts.Options -> IO()
+exec :: Opts.Options -> IO ()
 exec (Opts.GenUuid o) = Gen.genUuids o
 exec (Opts.Gen o) = do
-  cs <- csvDecodeFromFile "./campaigns.csv" >>= mkCampaigns
-  es <- csvDecodeFromFile "./resources/events.csv" >>= mkEvents
+  cs <- decodeCampaignsFrom "./campaigns.csv"
+  es <- decodeEventsFrom "./resources/events.csv"
   Gen.gen o cs es
   where
-    mkCampaigns :: Vector [String] -> IO (NEL.NonEmpty D.Campaign)
-    mkCampaigns sss = do
-      cs <- mkCampaigns0 (ME.join $ Vector.toList sss)
-      maybe (ME.throwError $ userError "No campaigns found") pure $ NEL.nonEmpty cs
+    decodeCampaignsFrom :: FilePath -> IO (NEL.NonEmpty D.Campaign)
+    decodeCampaignsFrom path =
+      csvDecodeFromFile path
+        <&> (NEL.nonEmpty . Vector.toList)
+        >>= maybe (ME.throwError $ userError "No campaigns found") pure
 
-    mkCampaigns0 :: [String] -> IO [D.Campaign]
-    mkCampaigns0 ss = traverse (uncurry mkCampaign) $ zip [0..] ss
+    decodeEventsFrom :: FilePath -> IO (NEL.NonEmpty D.Event)
+    decodeEventsFrom path =
+      csvDecodeFromFile path
+      <&> (NEL.nonEmpty . Vector.toList)
+      >>= maybe (ME.throwError $ userError "No events found") pure
 
-    mkCampaign :: Int -> String -> IO D.Campaign
-    mkCampaign i s =
-      maybe (ME.throwError $ userError $ "Error parsing UUID: " ++ s) pure $ D.Campaign i <$> UUID.fromString s
-
-    mkEvents :: Vector [String] -> IO (NEL.NonEmpty D.Event)
-    mkEvents sss =
-      maybe (ME.throwError $ userError "No events found") pure $ NEL.nonEmpty (mkEvents0 (ME.join $ Vector.toList sss))
-
-    mkEvents0 :: [String] -> [D.Event]
-    mkEvents0 = zipWith D.Event [0..]
 
 main :: IO ()
 main = OA.execParser Opts.opts >>= exec

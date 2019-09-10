@@ -6,8 +6,10 @@ module Gen
 ) where
 
 import Prelude
-import qualified Control.Monad.Random as R
+import Csv (csvEncodeNamedToFile, csvEncodeToFile)
+import Data.Functor ((<&>))
 import Control.Applicative (liftA2)
+import qualified Control.Monad.Random as R
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.List.NonEmpty as NEL
@@ -15,17 +17,13 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Time as Time
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID_V4
-import Data.Function ((&))
-
-import Csv (csvEncodeNamedToFile, csvEncodeToFile)
 import qualified Domain as D
-import qualified DomainCsv as Csv
 import qualified Opts
 import qualified Rnd
 
 ldjsonEncodeToFile :: Aeson.ToJSON a => D.FileWriteMode -> FilePath -> [a] -> IO ()
-ldjsonEncodeToFile mode' filePath as =
-  D.writeFile mode' filePath (BSC.unlines $ map Aeson.encode as)
+ldjsonEncodeToFile mode filePath as =
+  D.writeFile mode filePath (BSC.unlines $ map Aeson.encode as)
 
 includeId :: Int -> [Int -> a] -> [a]
 includeId startIndex f = (\(p1, p2) -> p1 p2) <$> zip f [startIndex..]
@@ -106,18 +104,15 @@ gen (Opts.GenOptions nr) cs es = do
 
 genUuids :: Opts.GenUuidOptions -> IO ()
 genUuids (Opts.GenUuidOptions nr) =
-  liftA2 zip randUuids randFloats
-    &   fmap (map (uncurry Csv.UuidRecord))
+  liftA2 zip randUuids randDoubles
+    <&> map (uncurry D.Campaign)
     >>= csvEncodeToFile D.Overwrite "./campaigns.csv"
   where
-    randUuids :: IO [String]
-    randUuids =
-      R.replicateM nr (UUID.toString <$> UUID_V4.nextRandom)
+    randUuids :: IO [UUID.UUID]
+    randUuids = R.replicateM nr UUID_V4.nextRandom
 
-    randFloats :: IO [Double]
-    randFloats =
-      R.randomR (0, 100 :: Int)
-      & R.getStdRandom
-      & fmap ((/ 100) . fromIntegral)
-      & R.replicateM nr
+    randDoubles :: IO [Double]
+    randDoubles = R.replicateM nr randDouble
 
+    randDouble :: IO Double
+    randDouble =  ((/ 100) . fromIntegral) <$> R.getStdRandom (R.randomR (0, 100 :: Int))
