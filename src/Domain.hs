@@ -2,7 +2,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Domain where
 
@@ -17,7 +16,6 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BSUTF8
 import qualified Data.Csv as Csv
 import qualified Data.Text as Text
-import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import qualified GHC.Generics as G
 
@@ -56,7 +54,7 @@ data Campaign = Campaign
 instance Aeson.ToJSON Campaign
 
 instance Aeson.ToJSONKey Campaign where
-  toJSONKey = AesonTp.toJSONKeyText (Text.pack . UUID.toString . campaignUuid)
+  toJSONKey = AesonTp.toJSONKeyText (Text.pack . UUID.toString . unUuid . campaignUuid)
 
 instance Csv.FromRecord Campaign
 
@@ -67,14 +65,23 @@ instance Csv.ToRecord Campaign where
       , Csv.toField (showFFloat Nothing successRate' "")
       ]
 
+newtype UUID = UUID { unUuid :: UUID.UUID }
+  deriving ( Eq
+           , G.Generic
+           , Ord
+           , Show
+           )
+
+instance Aeson.ToJSON UUID
+
 instance Csv.ToField UUID where
-  toField = BSUTF8.fromString . UUID.toString
+  toField = BSUTF8.fromString . UUID.toString . unUuid
 
 instance Csv.FromField UUID where
   parseField :: BS.ByteString -> Csv.Parser UUID
   parseField bs = case UUID.fromString $ BSUTF8.toString bs of
     Nothing -> fail $ "Invalid UUID: " <>  BSUTF8.toString bs
-    Just uuid -> pure uuid
+    Just uuid -> pure $ UUID uuid
 
 
 newtype Event = Event

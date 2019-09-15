@@ -15,7 +15,6 @@ import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.List.NonEmpty as NEL
 import qualified Data.Map.Strict as Map
 import qualified Data.Time as Time
-import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUID_V4
 import qualified Domain as D
 import qualified Opts
@@ -108,8 +107,8 @@ genUuids (Opts.GenUuidOptions nr) =
     <&> map (uncurry D.Campaign)
     >>= csvEncodeToFile D.Overwrite "./campaigns.csv"
   where
-    randUuids :: IO [UUID.UUID]
-    randUuids = R.replicateM nr UUID_V4.nextRandom
+    randUuids :: IO [D.UUID]
+    randUuids = R.replicateM nr (D.UUID <$> UUID_V4.nextRandom)
 
     randDoubles :: IO [Double]
     randDoubles = R.replicateM nr randDouble
