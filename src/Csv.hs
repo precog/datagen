@@ -1,5 +1,4 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module Csv where
 
@@ -14,11 +13,11 @@ import qualified Domain as D
 
 csvEncodeToFile :: Csv.ToRecord a => D.FileWriteMode -> FilePath -> [a] -> IO ()
 csvEncodeToFile mode filePath as =
-  (D.writeFile mode) filePath (Csv.encode as)
+  D.writeFile mode filePath (Csv.encode as)
 
 csvEncodeNamedToFile :: (Csv.DefaultOrdered a, Csv.ToNamedRecord a) => D.FileWriteMode -> FilePath -> [a] -> IO ()
 csvEncodeNamedToFile mode filePath as =
-  (D.writeFile mode) filePath (Csv.encodeDefaultOrderedByName as)
+  D.writeFile mode filePath (Csv.encodeDefaultOrderedByName as)
 
 csvDecodeFromFile :: Csv.FromRecord a => FilePath -> IO (Vector a)
 csvDecodeFromFile filePath = do
