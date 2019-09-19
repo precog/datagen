@@ -19,30 +19,39 @@ let courses5 = List/concat Course [ courses4, [ course5 ] ]
 let User = 
   { userName : Text
   , email : Text 
-  , business : { id : Text, name: Text, street: Text, number: Natural, city: Text, state: Text, country: Text }
+  }
+
+let Business = 
+  { business_id : Text
+  , business_name: Text
+  , business_street: Text
+  , business_street_number: Natural
+  , business_city: Text
+  , business_state: Text
+  , business_country: Text }
+
+let business =
+  { business_id = "2c7cab19-ae85-4bf0-b043-9d917a4b19d7" 
+  , business_name = "Example Inc."
+  , business_street = "42nd Sample Street"
+  , business_street_number = 21
+  , business_city = "Boulder"
+  , business_state = "CO"
+  , business_country = "USA"
   }
 
 let mkUser 
   = λ(userName : Text)
   → { userName = userName
     , email = userName ++ "@example.com"
-    , business = 
-      { id = "2c7cab19-ae85-4bf0-b043-9d917a4b19d7" 
-      , name = "Example Inc."
-      , street = "42nd Sample Street"
-      , number = 21
-      , city = "Boulder"
-      , state = "CO"
-      , country = "USA"
-      }
     } : User
 
 let Desc = { user : Text, courses: List Course }
-let Struct = { user : User, courses: List Course }
+let Struct = { user : User ⩓ Business, courses: List Course }
 
 let mk 
   = λ(desc: Desc) 
-  → { user = mkUser desc.user } /\ { courses = desc.courses } : Struct
+  → { user = mkUser desc.user } /\ { courses = desc.courses } /\ { user = business }: Struct
 
 let desc =
   [ { user = "ihan", courses = courses1 }
