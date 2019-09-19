@@ -31,7 +31,20 @@ let course3 = toMap { `Running efficient campaigns` = { id = 3, lessons = lesson
 let course4 = toMap { `Campaign management for example.com` = { id = 4, lessons = lessons4 } }
 let course5 = toMap { `Running an efficient cross platform marketing campaign` = { id = 5, lessons = lessons5 } }
 
-let courses1 = [ course1 ]
+let courses0 =
+  [ toMap
+    { `Data Protection Act 2018` = { id = 101, lessons = lessons1 }
+    , `General Data Protection` = { id = 102, lessons = lessons2 }
+    , `Regulations (GDPR)` = { id = 103, lessons = lessons3 }
+    , `Equality Act` = { id = 104, lessons = lessons4 }
+    , `Bribery Act` = { id = 105, lessons = lessons5 }
+    , `Criminal Finances Act` = { id = 106, lessons = lessons1 }
+    , `Gender Pay` = { id = 107, lessons = lessons2 }
+    , `Modern Slavery` = { id = 108, lessons = lessons3 }
+    , `Health and Safety` = { id = 109, lessons = lessons4 }
+    }
+  ]
+let courses1 = List/concat CourseMap [ courses0, [ course1 ] ]
 let courses2 = List/concat CourseMap [ courses1, [ course2 ] ]
 let courses3 = List/concat CourseMap [ courses2, [ course3 ] ]
 let courses4 = List/concat CourseMap [ courses3, [ course4 ] ]
