@@ -2,9 +2,9 @@ let List/map = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v9.0.0/Pr
 let List/concat = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v9.0.0/Prelude/List/concat
 
 let Lesson = { completed: Text }
-let Course = { id: Natural, course: Text, lessons: List Lesson }
-let Courses = { courses: List Course }
-
+let Course = { id: Natural, lessons: List Lesson }
+let CourseMap = List { mapKey: Text, mapValue: Course }
+let Courses = { courses: List CourseMap }
 
 let lesson1 = { completed = "2017-01-01" }
 let lesson2 = { completed = "2017-02-01" }
@@ -25,17 +25,17 @@ let lessons3 = [ lesson3, lesson4, lesson9, lesson11, lesson12 ]
 let lessons4 = [ lesson4, lesson7, lesson8, lesson10, lesson12 ]
 let lessons5 = [ lesson5, lesson6, lesson7, lesson8, lesson11 ]
 
-let course1 = { id = 1, course = "Introduction campaign management", lessons = lessons1 }
-let course2 = { id = 2, course = "Advanced campaign management", lessons = lessons2 }
-let course3 = { id = 3, course = "Running efficient campaigns", lessons = lessons3 }
-let course4 = { id = 4, course = "Campaign management for example.com", lessons = lessons4 }
-let course5 = { id = 5, course = "Running an efficient cross platform marketing campaign", lessons = lessons5 }
+let course1 = toMap { `Introduction campaign management` = { id = 1, lessons = lessons1 } }
+let course2 = toMap { `Advanced campaign management` = { id = 2, lessons = lessons2 } }
+let course3 = toMap { `Running efficient campaigns` = { id = 3, lessons = lessons3 } }
+let course4 = toMap { `Campaign management for example.com` = { id = 4, lessons = lessons4 } }
+let course5 = toMap { `Running an efficient cross platform marketing campaign` = { id = 5, lessons = lessons5 } }
 
 let courses1 = [ course1 ]
-let courses2 = List/concat Course [ courses1, [ course2 ] ]
-let courses3 = List/concat Course [ courses2, [ course3 ] ]
-let courses4 = List/concat Course [ courses3, [ course4 ] ]
-let courses5 = List/concat Course [ courses4, [ course5 ] ]
+let courses2 = List/concat CourseMap [ courses1, [ course2 ] ]
+let courses3 = List/concat CourseMap [ courses2, [ course3 ] ]
+let courses4 = List/concat CourseMap [ courses3, [ course4 ] ]
+let courses5 = List/concat CourseMap [ courses4, [ course5 ] ]
 
 let User =
   { userName: Text
@@ -73,7 +73,7 @@ let salary4 = { scale = 4, since = "2018-01-01" }
 let salary5 = { scale = 5, since = "2016-01-01" }
 
 let Other =
-  { sickLeave: List Text
+  { sickleave: List Text
   , holidays: List Text
   , promotions: List Text
   , bonuses: List Text
@@ -82,7 +82,7 @@ let Other =
   }
 
 let other =
-  { sickLeave = [ "2017-03-24", "2018-11-12" ]
+  { sickleave = [ "2017-03-24", "2018-11-12" ]
   , holidays = [ "2017-06-07 2017-07-02", "2018-07-12 2018-07-21"]
   , promotions = [ "2016-07-01", "2018-04-01" ]
   , bonuses = [ "2017-01-01", "$5000" ]
@@ -101,8 +101,8 @@ let mkUser
     }
     : User
 
-let Desc = { user: Text, courses: List Course, salary: Salary }
-let Struct = { user: User ⩓ Business, courses: List Course, salary: Salary } ⩓ Other
+let Desc = { user: Text, salary: Salary } ⩓ Courses
+let Struct = { user: User ⩓ Business, salary: Salary } ⩓ Courses ⩓ Other
 
 let mk
   = λ(desc: Desc)
