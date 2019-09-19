@@ -1,14 +1,35 @@
 let List/map = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v9.0.0/Prelude/List/map
 let List/concat = https://raw.githubusercontent.com/dhall-lang/dhall-lang/v9.0.0/Prelude/List/concat
 
-let Course = { id: Natural, course: Text, completed: Text }
+let Lesson = { completed: Text }
+let Course = { id: Natural, course: Text, lessons: List Lesson }
 let Courses = { courses: List Course }
 
-let course1 = { id = 1, course = "Introduction campaign management", completed = "2017-03-14" }
-let course2 = { id = 2, course = "Advanced campaign management", completed = "2017-07-04" }
-let course3 = { id = 3, course = "Running efficient campaigns", completed = "2017-08-24" }
-let course4 = { id = 4, course = "Campaign management for example.com", completed = "2018-02-01" }
-let course5 = { id = 5, course = "Running an efficient cross platform marketing campaign", completed = "2018-10-13" }
+
+let lesson1 = { completed = "2017-01-01" }
+let lesson2 = { completed = "2017-02-01" }
+let lesson3 = { completed = "2017-03-01" }
+let lesson4 = { completed = "2017-04-01" }
+let lesson5 = { completed = "2017-05-01" }
+let lesson6 = { completed = "2017-06-01" }
+let lesson7 = { completed = "2017-07-01" }
+let lesson8 = { completed = "2017-08-01" }
+let lesson9 = { completed = "2017-09-01" }
+let lesson10 = { completed = "2017-10-01" }
+let lesson11 = { completed = "2017-11-01" }
+let lesson12 = { completed = "2017-12-01" }
+
+let lessons1 = [ lesson1, lesson3, lesson4, lesson6, lesson7 ]
+let lessons2 = [ lesson2, lesson5, lesson8, lesson9, lesson10 ]
+let lessons3 = [ lesson3, lesson4, lesson9, lesson11, lesson12 ]
+let lessons4 = [ lesson4, lesson7, lesson8, lesson10, lesson12 ]
+let lessons5 = [ lesson5, lesson6, lesson7, lesson8, lesson11 ]
+
+let course1 = { id = 1, course = "Introduction campaign management", lessons = lessons1 }
+let course2 = { id = 2, course = "Advanced campaign management", lessons = lessons2 }
+let course3 = { id = 3, course = "Running efficient campaigns", lessons = lessons3 }
+let course4 = { id = 4, course = "Campaign management for example.com", lessons = lessons4 }
+let course5 = { id = 5, course = "Running an efficient cross platform marketing campaign", lessons = lessons5 }
 
 let courses1 = [ course1 ]
 let courses2 = List/concat Course [ courses1, [ course2 ] ]
