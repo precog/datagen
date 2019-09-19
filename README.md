@@ -14,7 +14,8 @@ $ stack build
 ```
 
 ## run
-create a number of UUIDs in `./campaigns.csv`
+
+Create a number of UUIDs in `./campaigns.csv`
 ```sh
 stack exec datagen-exe -- genuuids -n 20
 ```
@@ -32,3 +33,7 @@ number should be between 0.0 and 1.0.
 ```csv
 ca109dae-b1af-4d6b-b8eb-6ae608f2aa3d, 0.8 // <--
 ```
+
+# datagen dhall
+
+See [dhall/README.md](dhall/README.md)
