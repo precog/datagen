@@ -5,6 +5,7 @@ module Csv where
 import Prelude
 import qualified Control.Monad.Except as ME
 import qualified Data.ByteString.Lazy as ByteString
+import qualified GHC.IO.Handle.FD as HFD
 import qualified Data.Csv as Csv
 import Data.Vector (Vector)
 import System.IO.Error (userError)
@@ -14,6 +15,10 @@ import qualified Domain as D
 csvEncodeToFile :: Csv.ToRecord a => D.FileWriteMode -> FilePath -> [a] -> IO ()
 csvEncodeToFile mode filePath as =
   D.writeFile mode filePath (Csv.encode as)
+
+csvEncodeToStdOut :: Csv.ToRecord a => [a] -> IO ()
+csvEncodeToStdOut as =
+  ByteString.hPut HFD.stdout (Csv.encode as)
 
 csvEncodeNamedToFile :: (Csv.DefaultOrdered a, Csv.ToNamedRecord a) => D.FileWriteMode -> FilePath -> [a] -> IO ()
 csvEncodeNamedToFile mode filePath as =

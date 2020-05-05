@@ -6,10 +6,12 @@ module Gen
 ) where
 
 import Prelude
-import Csv (csvEncodeNamedToFile, csvEncodeToFile)
+import Csv (csvEncodeNamedToFile, csvEncodeToFile, csvEncodeToStdOut)
 import Data.Functor ((<&>))
 import Control.Applicative (liftA2)
 import qualified Control.Monad.Random as R
+import qualified Data.ByteString.Lazy as ByteString
+import qualified GHC.IO.Handle.FD as HFD
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.List.NonEmpty as NEL
@@ -20,9 +22,9 @@ import qualified Domain as D
 import qualified Opts
 import qualified Rnd
 
-ldjsonEncodeToFile :: Aeson.ToJSON a => D.FileWriteMode -> FilePath -> [a] -> IO ()
-ldjsonEncodeToFile mode filePath as =
-  D.writeFile mode filePath (BSC.unlines $ map Aeson.encode as)
+ldjsonEncodeToFile :: Aeson.ToJSON a => [a] -> IO ()
+ldjsonEncodeToFile as =
+  ByteString.hPut HFD.stdout (BSC.unlines $ map Aeson.encode as)
 
 includeId :: Int -> [Int -> a] -> [a]
 includeId startIndex f = (\(p1, p2) -> p1 p2) <$> zip f [startIndex..]
@@ -76,7 +78,7 @@ genChunk :: NEL.NonEmpty D.Campaign -> NEL.NonEmpty D.Event -> Int -> ChunkArgs 
 genChunk cs es nr (ChunkArgs startRow startE startEC startHC mode) = do
   campaignCounts <- R.evalRandIO $ R.replicateM nr $ Rnd.randomCampaignCounts cs es
   let rows = includeId startRow $ mkRows campaignCounts
-  ldjsonEncodeToFile mode "./stats.ldjson" rows
+  ldjsonEncodeToFile rows
   -- let indexedEventCounts = zip [startRow..] eventCounts
   -- let csvEvents = includeId startE $ indexedEventCounts >>= mkCsvEvents
   -- csvEncodeNamedToFile mode "./events.csv" csvEvents
@@ -105,7 +107,7 @@ genUuids :: Opts.GenUuidOptions -> IO ()
 genUuids (Opts.GenUuidOptions nr) =
   liftA2 zip randUuids randDoubles
     <&> map (uncurry D.Campaign)
-    >>= csvEncodeToFile D.Overwrite "./campaigns.csv"
+    >>= csvEncodeToStdOut
   where
     randUuids :: IO [D.UUID]
     randUuids = R.replicateM nr (D.UUID <$> UUID_V4.nextRandom)
